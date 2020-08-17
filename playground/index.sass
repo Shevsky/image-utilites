@@ -1,0 +1,33 @@
+html, body
+  margin: 0
+  padding: 0
+
+.app
+  width: 70%
+  min-width: 700px
+  margin: 50px auto
+
+  &__header
+    font-size: 24px
+    margin-bottom: 20px
+
+  &__menu
+    display: flex
+    align-items: center
+    margin-bottom: 10px
+    background-color: #eee
+
+    &-item
+      color: #777
+      text-decoration: none
+      padding: 5px 10px
+
+      &:not(:last-child)
+        margin-right: 10px
+
+      &--active
+        color: #000
+        background-color: #ddd
+
+      &:hover
+        color: #000

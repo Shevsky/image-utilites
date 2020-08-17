@@ -1,0 +1,40 @@
+{
+  "name": "image-utilites",
+  "version": "0.0.1",
+  "description": "Grayscale detector",
+  "license": "MIT",
+  "author": "Konstantin Shevsky",
+  "main": "dist/index.js",
+  "module": "dist/image-utilites.esm.js",
+  "typings": "dist/index.d.ts",
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "start": "tsdx watch",
+    "build": "tsdx build",
+    "test": "tsdx test --env=jsdom",
+    "lint": "tsdx lint",
+    "predeploy": "npm run build --prefix playground",
+    "deploy": "gh-pages -d playground/dist"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Shevsky/image-utilites.git"
+  },
+  "keywords": [
+    "grayscale",
+    "image"
+  ],
+  "bugs": {
+    "url": "https://github.com/Shevsky/image-utilites/issues"
+  },
+  "homepage": "https://shevsky.github.io/image-utilites",
+  "devDependencies": {
+    "@types/jest": "26.0.10",
+    "gh-pages": "3.1.0",
+    "tsdx": "0.13.2",
+    "tslib": "1.13.0",
+    "typescript": "3.9.7"
+  }
+}
