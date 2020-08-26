@@ -39,7 +39,5 @@
     "tslib": "1.13.0",
     "typescript": "3.9.7"
   },
-  "dependencies": {
-    "utils": "0.3.1"
-  }
+  "dependencies": {}
 }
