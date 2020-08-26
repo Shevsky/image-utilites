@@ -1,17 +1,6 @@
 import classNames from 'classnames';
-import {
-  IMAGE_COLOR_TYPE,
-  ImageColorTypeReader,
-  TImageColorTypeReaderConfig,
-} from 'image-utilites';
-import React, {
-  ChangeEvent,
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-  useCallback,
-} from 'react';
+import { IMAGE_COLOR_TYPE, ImageColorTypeReader, TImageColorTypeReaderConfig } from 'image-utilites';
+import React, { ChangeEvent, useEffect, useMemo, useRef, useState, useCallback } from 'react';
 import { FilePreview } from './file-preview';
 import './image-color-type-reader-component.sass';
 
@@ -30,21 +19,18 @@ export function ImageColorTypeReaderComponent(): JSX.Element {
   }, []);
 
   const [file, setFile] = useState<File | void>(void 0);
-  const handleChangeFile = useCallback(
-    (event: ChangeEvent<HTMLInputElement>): void => {
-      reset();
+  const handleChangeFile = useCallback((event: ChangeEvent<HTMLInputElement>): void => {
+    reset();
 
-      if (!event?.target?.files?.length) {
-        return setFile(void 0);
-      }
+    if (!event?.target?.files?.length) {
+      return setFile(void 0);
+    }
 
-      setFile(event.target.files[0]);
-    },
-    []
-  );
+    setFile(event.target.files[0]);
+  }, []);
 
   const [config, setConfig] = useState<TImageColorTypeReaderConfig>({
-    minifySize: 300,
+    minifySize: 300
   });
   const handleChangeConfig = useCallback(
     (event: ChangeEvent<HTMLInputElement>): void => {
@@ -52,8 +38,8 @@ export function ImageColorTypeReaderComponent(): JSX.Element {
         target: {
           dataset: { type },
           name,
-          value,
-        },
+          value
+        }
       } = event;
       const nextValue = type === 'number' ? Number(value) || 0 : value;
 
@@ -64,16 +50,13 @@ export function ImageColorTypeReaderComponent(): JSX.Element {
 
       setConfig({
         ...config,
-        [name]: nextValue,
+        [name]: nextValue
       });
     },
     [config]
   );
 
-  const imageColorTypeReader = useMemo(
-    (): ImageColorTypeReader => new ImageColorTypeReader(config),
-    [config]
-  );
+  const imageColorTypeReader = useMemo((): ImageColorTypeReader => new ImageColorTypeReader(config), [config]);
 
   const [result, setResult] = useState<IMAGE_COLOR_TYPE | void>(void 0);
   useEffect((): void => {
@@ -103,23 +86,7 @@ export function ImageColorTypeReaderComponent(): JSX.Element {
     <div className="image-color-type-reader-component">
       <div className="image-color-type-reader-component__config">
         <div className="image-color-type-reader-component__config-item">
-          <div className="image-color-type-reader-component__config-item-label">
-            chunkSize
-          </div>
-          <div className="image-color-type-reader-component__config-item-control">
-            <input
-              data-type="number"
-              name="chunkSize"
-              type="text"
-              value={config.chunkSize ?? ''}
-              onChange={handleChangeConfig}
-            />
-          </div>
-        </div>
-        <div className="image-color-type-reader-component__config-item">
-          <div className="image-color-type-reader-component__config-item-label">
-            grayscaleThreshold
-          </div>
+          <div className="image-color-type-reader-component__config-item-label">grayscaleThreshold</div>
           <div className="image-color-type-reader-component__config-item-control">
             <input
               data-type="number"
@@ -131,9 +98,7 @@ export function ImageColorTypeReaderComponent(): JSX.Element {
           </div>
         </div>
         <div className="image-color-type-reader-component__config-item">
-          <div className="image-color-type-reader-component__config-item-label">
-            minifySize
-          </div>
+          <div className="image-color-type-reader-component__config-item-label">minifySize</div>
           <div className="image-color-type-reader-component__config-item-control">
             <input
               data-type="number"
@@ -153,7 +118,7 @@ export function ImageColorTypeReaderComponent(): JSX.Element {
         <div
           className={classNames('image-color-type-reader-component__result', {
             ['image-color-type-reader-component__result--error']: !!error,
-            ['image-color-type-reader-component__result--loading']: isLoading,
+            ['image-color-type-reader-component__result--loading']: isLoading
           })}
         >
           {isLoading ? (

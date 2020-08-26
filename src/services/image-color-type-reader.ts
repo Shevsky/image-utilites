@@ -1,3 +1,4 @@
+import { WorkerPort } from './../workers/worker-port';
 import { cacheMake } from './../utils/cache-make';
 import { PNG_COLOR_TYPE, PngColorTypeReader } from './png-color-type-reader';
 
@@ -17,18 +18,18 @@ type TImageSize = {
 };
 
 export type TImageColorTypeReaderConfig = {
-  chunkSize?: number;
   grayscaleThreshold?: number;
   minifySize?: number;
 };
 
 const IMAGE_READER_DEFAULT_CONFIG: Required<TImageColorTypeReaderConfig> = {
-  chunkSize: 1000,
   grayscaleThreshold: 0,
   minifySize: 300
 };
 
 export class ImageColorTypeReader {
+  private static iterationId: number = 0;
+
   private readonly config: Required<TImageColorTypeReaderConfig>;
   private memento: Map<Blob, IMAGE_COLOR_TYPE> = cacheMake<Blob, IMAGE_COLOR_TYPE>();
 
@@ -36,10 +37,16 @@ export class ImageColorTypeReader {
     this.config = { ...IMAGE_READER_DEFAULT_CONFIG, ...config };
   }
 
+  get iterationId(): string {
+    return ImageColorTypeReader.iterationId.toString();
+  }
+
   read(blob: Blob): Promise<IMAGE_COLOR_TYPE> {
     if (this.memento.has(blob)) {
       return Promise.resolve(this.memento.get(blob) as IMAGE_COLOR_TYPE);
     }
+
+    ImageColorTypeReader.iterationId++;
 
     return PngColorTypeReader.read(blob)
       .then((pngColorType: PNG_COLOR_TYPE): Promise<never> | IMAGE_COLOR_TYPE => {
@@ -87,23 +94,20 @@ export class ImageColorTypeReader {
     };
   }
 
-  private isGrayscale(red: number, green: number, blue: number): boolean {
-    const isFullyGrayscale = red === green && green === blue;
-
-    if (!this.config.grayscaleThreshold) {
-      return isFullyGrayscale;
-    }
-
-    return (
-      Math.abs(red - green) <= this.config.grayscaleThreshold &&
-      Math.abs(green - blue) <= this.config.grayscaleThreshold &&
-      Math.abs(red - blue) <= this.config.grayscaleThreshold
-    );
-  }
-
   private detectColorType(blob: Blob): Promise<IMAGE_COLOR_TYPE> {
     if (!URL) {
       return Promise.reject(new Error('URL unavailable'));
+    }
+
+    if (!Worker) {
+      return Promise.reject(new Error('Worker unavailable'));
+    }
+
+    let workerPort: WorkerPort;
+    try {
+      workerPort = WorkerPort.make('is-grayscale');
+    } catch (e) {
+      return Promise.reject(e);
     }
 
     return new Promise((resolve: (colorType: IMAGE_COLOR_TYPE) => void, reject: (error: Error) => void): void => {
@@ -126,42 +130,23 @@ export class ImageColorTypeReader {
         context.drawImage(image, 0, 0, naturalWidth, naturalHeight, 0, 0, width, height);
 
         const imageData = context.getImageData(0, 0, width, height);
-        if (!imageData.data) {
+        if (!imageData.data || !imageData.data.buffer) {
           return reject(new TypeError('Cannot read image data'));
         }
 
-        const data = imageData.data;
-        const length = data.length;
+        const buffer = imageData.data.buffer;
 
-        let colorType = IMAGE_COLOR_TYPE.GRAYSCALE;
-        let isDone = false;
+        workerPort.subscribe(this.iterationId, (data: any): void =>
+          resolve(data.result ? IMAGE_COLOR_TYPE.GRAYSCALE : IMAGE_COLOR_TYPE.COLORED)
+        );
 
-        let offset = 0;
-
-        const stepChunkPixels = (): void => {
-          for (let i = 0; i <= this.config.chunkSize; i++) {
-            if (offset >= length) {
-              isDone = true;
-              break;
-            }
-
-            if (!this.isGrayscale(data[offset], data[offset + 1], data[offset + 2])) {
-              colorType = IMAGE_COLOR_TYPE.COLORED;
-              isDone = true;
-              break;
-            }
-
-            offset += 4;
-          }
-
-          if (!isDone) {
-            requestAnimationFrame(stepChunkPixels);
-          } else {
-            resolve(colorType);
-          }
+        const message = {
+          id: this.iterationId,
+          buffer,
+          threshold: this.config.grayscaleThreshold
         };
 
-        requestAnimationFrame(stepChunkPixels);
+        workerPort.post(message, [buffer]);
       };
 
       image.src = URL.createObjectURL(blob);
