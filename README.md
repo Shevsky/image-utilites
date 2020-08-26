@@ -24,7 +24,6 @@ ImageColorTypeReader constructor takes a config object.
 
 Name | Description | Type | Default value
 --- | --- | --- | ---
-chunkSize | Reader divides async iterations by image pixels to chunks with passed size. | number | 1000
 grayscaleThreshold | By default, reader determines is an image is grayscale if red === green === blue. This parameter allows to set the max difference between colors to assume that image is grayscale. | number (0-255) | 0
 minifySize | When reader starting to work it will resize source image to width and height not longer that passed value in order to reduce a pixels count. | number | 300
 
