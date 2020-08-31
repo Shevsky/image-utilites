@@ -2,7 +2,7 @@ const fs = require('fs');
 const path = require('path');
 const { minify } = require('terser');
 
-async function createWorkerUrl(name) {
+async function getWorkerBody(name) {
   const worker = `${path.resolve('src/workers')}/${name}`;
 
   let response = fs.readFileSync(worker).toString();
@@ -12,7 +12,7 @@ async function createWorkerUrl(name) {
     }).then(output => output.code);
   }
 
-  return `data:application/javascript;base64,${Buffer.from(response).toString('base64')}`;
+  return response;
 }
 
-module.exports = { createWorkerUrl };
+module.exports = { getWorkerBody };
