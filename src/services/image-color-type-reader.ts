@@ -96,11 +96,11 @@ export class ImageColorTypeReader {
 
   private detectColorType(blob: Blob): Promise<IMAGE_COLOR_TYPE> {
     if (!URL) {
-      return Promise.reject(new Error('URL unavailable'));
+      return Promise.reject(new TypeError('URL unavailable'));
     }
 
     if (!Worker) {
-      return Promise.reject(new Error('Worker unavailable'));
+      return Promise.reject(new TypeError('Worker unavailable'));
     }
 
     let workerPort: WorkerPort;

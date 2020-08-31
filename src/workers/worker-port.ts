@@ -1,16 +1,16 @@
-import { cacheMake } from './../utils/cache-make';
+import { createWorkerBlobUrl } from './../utils/create-worker-blob-url';
 import Workers from './workers.json';
 
 export class WorkerPort {
-  private static memento: Map<keyof typeof Workers, WorkerPort> = cacheMake<keyof typeof Workers, WorkerPort>();
+  private static memento: Partial<Record<keyof typeof Workers, WorkerPort>> = {};
 
   static make(name: keyof typeof Workers): WorkerPort {
-    if (WorkerPort.memento.has(name)) {
-      return WorkerPort.memento.get(name) as WorkerPort;
+    if (name in WorkerPort.memento) {
+      return WorkerPort.memento[name] as WorkerPort;
     }
 
     const workerPort = new WorkerPort(name);
-    WorkerPort.memento.set(name, workerPort);
+    WorkerPort.memento[name] = workerPort;
 
     return workerPort;
   }
@@ -23,7 +23,10 @@ export class WorkerPort {
       throw new TypeError('Worker unavailable');
     }
 
-    this.worker = new Worker(Workers[this.name]);
+    const body = Workers[this.name];
+    const url = createWorkerBlobUrl(body);
+
+    this.worker = new Worker(url);
     this.worker.addEventListener('message', this.handleMessage);
   }
 
