@@ -31909,7 +31909,7 @@ exports.cacheMake = cacheMake;
 
 function cacheMake() {
   if (!Map) {
-    throw new TypeError('Map unavailable');
+    return void 0;
   }
 
   return new Map();
@@ -31961,40 +31961,69 @@ var _cacheMake = require("./../utils/cache-make");
 
 var _readBlobBuffer = require("./../utils/read-blob-buffer");
 
+var CHUNK_8_ARRAY_BYTES_FROM = 0;
+var CHUNK_8_ARRAY_BYTES_TO = 26;
+var HEADER_BYTES_FROM = 0;
+var HEADER_BYTES_TO = 4;
+var HEADER_RADIX = 16;
+
 var BlobReader =
 /** @class */
 function () {
   function BlobReader() {}
 
-  BlobReader.readBuffer = function (blob) {
-    if (BlobReader.mementoBuffer.has(blob)) {
-      return Promise.resolve(BlobReader.mementoBuffer.get(blob));
-    }
+  BlobReader.read8Array = function (blob, fully) {
+    var _a;
 
-    return (0, _readBlobBuffer.readBlobBuffer)(blob).then(function (buffer) {
-      BlobReader.mementoBuffer.set(blob, buffer);
-      return buffer;
-    });
-  };
-
-  BlobReader.read8Array = function (blob) {
     if (!Uint8Array) {
       return Promise.reject(new TypeError('Uint8Array unavailable'));
     }
 
-    if (BlobReader.memento8Array.has(blob)) {
+    if (!fully && ((_a = BlobReader.memento8Array) === null || _a === void 0 ? void 0 : _a.has(blob))) {
       return Promise.resolve(BlobReader.memento8Array.get(blob));
     }
 
-    return BlobReader.readBuffer(blob).then(function (buffer) {
-      var array = new Uint8Array(buffer);
-      BlobReader.memento8Array.set(blob, array);
+    return (0, _readBlobBuffer.readBlobBuffer)(blob).then(function (buffer) {
+      return new Uint8Array(buffer);
+    }).then(function (array) {
+      if (fully) {
+        return array;
+      }
+
+      return array.subarray(CHUNK_8_ARRAY_BYTES_FROM, CHUNK_8_ARRAY_BYTES_TO);
+    }).then(function (array) {
+      var _a;
+
+      if (!fully) {
+        (_a = BlobReader.memento8Array) === null || _a === void 0 ? void 0 : _a.set(blob, array);
+      }
+
       return array;
     });
   };
 
-  BlobReader.mementoBuffer = (0, _cacheMake.cacheMake)();
+  BlobReader.readHeader = function (blob) {
+    var _a;
+
+    if ((_a = BlobReader.mementoHeader) === null || _a === void 0 ? void 0 : _a.has(blob)) {
+      return Promise.resolve(BlobReader.mementoHeader.get(blob));
+    }
+
+    return BlobReader.read8Array(blob).then(function (array) {
+      var subarray = array.subarray(HEADER_BYTES_FROM, HEADER_BYTES_TO);
+      return subarray.reduce(function (acc, item) {
+        return acc + item.toString(HEADER_RADIX);
+      }, '');
+    }).then(function (header) {
+      var _a;
+
+      (_a = BlobReader.mementoHeader) === null || _a === void 0 ? void 0 : _a.set(blob, header);
+      return header;
+    });
+  };
+
   BlobReader.memento8Array = (0, _cacheMake.cacheMake)();
+  BlobReader.mementoHeader = (0, _cacheMake.cacheMake)();
   return BlobReader;
 }();
 
@@ -32555,11 +32584,11 @@ var MIME_TYPE;
 exports.MIME_TYPE = MIME_TYPE;
 
 (function (MIME_TYPE) {
-  MIME_TYPE["GIF"] = "gif";
-  MIME_TYPE["JPEG"] = "jpeg";
-  MIME_TYPE["PDF"] = "pdf";
-  MIME_TYPE["PNG"] = "png";
-  MIME_TYPE["WEBP"] = "webp";
+  MIME_TYPE["GIF"] = "image/gif";
+  MIME_TYPE["JPEG"] = "image/jpeg";
+  MIME_TYPE["PDF"] = "application/pdf";
+  MIME_TYPE["PNG"] = "image/png";
+  MIME_TYPE["WEBP"] = "image/webp";
 })(MIME_TYPE || (exports.MIME_TYPE = MIME_TYPE = {}));
 
 var HEADER_MIME_TYPE_MAP = {
@@ -32575,9 +32604,6 @@ var HEADER_MIME_TYPE_MAP = {
   ffd8ffe8: MIME_TYPE.JPEG,
   ffd8ffee: MIME_TYPE.JPEG
 };
-var HEADER_BYTES_FROM = 0;
-var HEADER_BYTES_TO = 4;
-var HEADER_RADIX = 16;
 
 var MimeTypeReader =
 /** @class */
@@ -32585,22 +32611,21 @@ function () {
   function MimeTypeReader() {}
 
   MimeTypeReader.read = function (blob) {
-    if (MimeTypeReader.memento.has(blob)) {
+    var _a;
+
+    if ((_a = MimeTypeReader.memento) === null || _a === void 0 ? void 0 : _a.has(blob)) {
       return Promise.resolve(MimeTypeReader.memento.get(blob));
     }
 
-    return _blobReader.BlobReader.read8Array(blob).then(function (array) {
-      var subarray = array.subarray(HEADER_BYTES_FROM, HEADER_BYTES_TO);
-      return subarray.reduce(function (acc, item) {
-        return acc + item.toString(HEADER_RADIX);
-      }, '');
-    }).then(function (header) {
+    return _blobReader.BlobReader.readHeader(blob).then(function (header) {
+      var _a;
+
       if (!(header in HEADER_MIME_TYPE_MAP)) {
         return Promise.reject(new Error('Unknown mime type'));
       }
 
       var mimeType = HEADER_MIME_TYPE_MAP[header];
-      MimeTypeReader.memento.set(blob, mimeType);
+      (_a = MimeTypeReader.memento) === null || _a === void 0 ? void 0 : _a.set(blob, mimeType);
       return mimeType;
     });
   };
@@ -32651,7 +32676,9 @@ function () {
   function PngColorTypeReader() {}
 
   PngColorTypeReader.read = function (blob) {
-    if (PngColorTypeReader.memento.has(blob)) {
+    var _a;
+
+    if ((_a = PngColorTypeReader.memento) === null || _a === void 0 ? void 0 : _a.has(blob)) {
       return Promise.resolve(PngColorTypeReader.memento.get(blob));
     }
 
@@ -32665,12 +32692,14 @@ function () {
       var subarray = array.subarray(HEADER_BYTES_FROM, HEADER_BYTES_TO);
       return subarray[0];
     }).then(function (byte) {
+      var _a;
+
       if (!(byte in HEADER_COLOR_TYPE_MAP)) {
         return Promise.reject('Unknown color type');
       }
 
       var colorType = HEADER_COLOR_TYPE_MAP[byte];
-      PngColorTypeReader.memento.set(blob, colorType);
+      (_a = PngColorTypeReader.memento) === null || _a === void 0 ? void 0 : _a.set(blob, colorType);
       return colorType;
     });
   };
@@ -32735,7 +32764,9 @@ function () {
   ImageColorTypeReader.prototype.read = function (blob) {
     var _this = this;
 
-    if (this.memento.has(blob)) {
+    var _a;
+
+    if ((_a = this.memento) === null || _a === void 0 ? void 0 : _a.has(blob)) {
       return Promise.resolve(this.memento.get(blob));
     }
 
@@ -32749,8 +32780,9 @@ function () {
     }).catch(function () {
       return _this.detectColorType(blob);
     }).then(function (colorType) {
-      _this.memento.set(blob, colorType);
+      var _a;
 
+      (_a = _this.memento) === null || _a === void 0 ? void 0 : _a.set(blob, colorType);
       return colorType;
     });
   };
@@ -32810,8 +32842,6 @@ function () {
       if (!context) {
         return reject(new TypeError('2d context of canvas is unavailable'));
       }
-
-      image.crossOrigin = 'anonymous';
 
       image.onerror = function () {
         return reject(new Error('Cannot load image'));
@@ -33542,7 +33572,7 @@ var parent = module.bundle.parent;
 if ((!parent || !parent.isParcelRequire) && typeof WebSocket !== 'undefined') {
   var hostname = "" || location.hostname;
   var protocol = location.protocol === 'https:' ? 'wss' : 'ws';
-  var ws = new WebSocket(protocol + '://' + hostname + ':' + "49205" + '/');
+  var ws = new WebSocket(protocol + '://' + hostname + ':' + "58692" + '/');
 
   ws.onmessage = function (event) {
     checkedAssets = {};
