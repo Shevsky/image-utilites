@@ -32011,6 +32011,7 @@ function () {
 
     return BlobReader.read8Array(blob).then(function (array) {
       var subarray = array.subarray(HEADER_BYTES_FROM, HEADER_BYTES_TO);
+      console.log(subarray);
       return subarray.reduce(function (acc, item) {
         return acc + item.toString(HEADER_RADIX);
       }, '');
@@ -32619,6 +32620,8 @@ function () {
 
     return _blobReader.BlobReader.readHeader(blob).then(function (header) {
       var _a;
+
+      console.log(header);
 
       if (!(header in HEADER_MIME_TYPE_MAP)) {
         return Promise.reject(new Error('Unknown mime type'));
@@ -33572,7 +33575,7 @@ var parent = module.bundle.parent;
 if ((!parent || !parent.isParcelRequire) && typeof WebSocket !== 'undefined') {
   var hostname = "" || location.hostname;
   var protocol = location.protocol === 'https:' ? 'wss' : 'ws';
-  var ws = new WebSocket(protocol + '://' + hostname + ':' + "58692" + '/');
+  var ws = new WebSocket(protocol + '://' + hostname + ':' + "50083" + '/');
 
   ws.onmessage = function (event) {
     checkedAssets = {};
