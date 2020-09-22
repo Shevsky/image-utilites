@@ -7,7 +7,7 @@ export enum PNG_COLOR_TYPE {
   RGB = 'rgb',
   PLTE = 'plte',
   GRAYSCALE_ALPHA = 'grayscale_alpha',
-  RGB_ALPHA = 'rgb_alpha',
+  RGB_ALPHA = 'rgb_alpha'
 }
 
 const HEADER_COLOR_TYPE_MAP: Record<number, PNG_COLOR_TYPE> = {
@@ -15,23 +15,18 @@ const HEADER_COLOR_TYPE_MAP: Record<number, PNG_COLOR_TYPE> = {
   2: PNG_COLOR_TYPE.RGB,
   3: PNG_COLOR_TYPE.PLTE,
   4: PNG_COLOR_TYPE.GRAYSCALE_ALPHA,
-  6: PNG_COLOR_TYPE.RGB_ALPHA,
+  6: PNG_COLOR_TYPE.RGB_ALPHA
 };
 
 const HEADER_BYTES_FROM = 25;
 const HEADER_BYTES_TO = 26;
 
 export class PngColorTypeReader {
-  private static memento: Map<Blob, PNG_COLOR_TYPE> = cacheMake<
-    Blob,
-    PNG_COLOR_TYPE
-  >();
+  private static memento?: Map<Blob, PNG_COLOR_TYPE> = cacheMake<Blob, PNG_COLOR_TYPE>();
 
   static read(blob: Blob): Promise<PNG_COLOR_TYPE> {
-    if (PngColorTypeReader.memento.has(blob)) {
-      return Promise.resolve(
-        PngColorTypeReader.memento.get(blob) as PNG_COLOR_TYPE
-      );
+    if (PngColorTypeReader.memento?.has(blob)) {
+      return Promise.resolve(PngColorTypeReader.memento.get(blob) as PNG_COLOR_TYPE);
     }
 
     return MimeTypeReader.read(blob)
@@ -53,7 +48,7 @@ export class PngColorTypeReader {
 
         const colorType = HEADER_COLOR_TYPE_MAP[byte];
 
-        PngColorTypeReader.memento.set(blob, colorType);
+        PngColorTypeReader.memento?.set(blob, colorType);
 
         return colorType;
       });

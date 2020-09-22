@@ -31,7 +31,7 @@ export class ImageColorTypeReader {
   private static iterationId: number = 0;
 
   private readonly config: Required<TImageColorTypeReaderConfig>;
-  private memento: Map<Blob, IMAGE_COLOR_TYPE> = cacheMake<Blob, IMAGE_COLOR_TYPE>();
+  private memento?: Map<Blob, IMAGE_COLOR_TYPE> = cacheMake<Blob, IMAGE_COLOR_TYPE>();
 
   constructor(config: TImageColorTypeReaderConfig = {}) {
     this.config = { ...IMAGE_READER_DEFAULT_CONFIG, ...config };
@@ -42,7 +42,7 @@ export class ImageColorTypeReader {
   }
 
   read(blob: Blob): Promise<IMAGE_COLOR_TYPE> {
-    if (this.memento.has(blob)) {
+    if (this.memento?.has(blob)) {
       return Promise.resolve(this.memento.get(blob) as IMAGE_COLOR_TYPE);
     }
 
@@ -59,7 +59,7 @@ export class ImageColorTypeReader {
       .catch((): Promise<IMAGE_COLOR_TYPE> => this.detectColorType(blob))
       .then(
         (colorType: IMAGE_COLOR_TYPE): IMAGE_COLOR_TYPE => {
-          this.memento.set(blob, colorType);
+          this.memento?.set(blob, colorType);
 
           return colorType;
         }

@@ -1,6 +1,6 @@
-export function cacheMake<K, V>(): Map<K, V> {
+export function cacheMake<K, V>(): Map<K, V> | undefined {
   if (!Map) {
-    throw new TypeError('Map unavailable');
+    return void 0;
   }
 
   return new Map<K, V>();

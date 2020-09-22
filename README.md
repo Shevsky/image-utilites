@@ -40,5 +40,6 @@ MimeTypeReader.read(file).then(mimeType => console.log(mimeType)); // Don't forg
 ```
 
 ## Result
-MimeTypeReader returns a promise that resolves `gif`, `jpeg`, `pdf`, `png`, `webp` (enum MIME_TYPE).
+MimeTypeReader returns a promise that resolves `image/gif`, `image/jpeg`, `application/pdf`, `image/png`, `image/webp
+` (enum MIME_TYPE).
 
