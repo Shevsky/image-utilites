@@ -32011,7 +32011,6 @@ function () {
 
     return BlobReader.read8Array(blob).then(function (array) {
       var subarray = array.subarray(HEADER_BYTES_FROM, HEADER_BYTES_TO);
-      console.log(subarray);
       return subarray.reduce(function (acc, item) {
         return acc + item.toString(HEADER_RADIX);
       }, '');
@@ -32504,7 +32503,7 @@ function createWorkerBlobUrl(body) {
 }
 },{}],"../src/workers/workers.json":[function(require,module,exports) {
 module.exports = {
-  "is-grayscale": "function resolve(e,s){self.postMessage({id:e,result:s},[])}function isGrayscale(e,s,t,a){const n=e===s&&s===t;return!a||n?n:Math.abs(e-s)<=a&&Math.abs(s-t)<=a&&Math.abs(e-t)<=a}self.onmessage=function(e){const s=e.data,t=new Uint8Array(s.buffer),a=t.length;let n=!0;for(let e=0;e<a;e+=4)if(!isGrayscale(t[e],t[e+1],t[e+2],s.threshold)){n=!1;break}resolve(s.id,n)};"
+  "is-grayscale": "/**\n * @param {string} message.data.id\n * @param {ArrayBuffer} message.data.buffer\n * @param {number} message.data.threshold\n */\nself.onmessage = function(message) {\n  const payload = message.data;\n  \n  console.log('start checking');\n\n  const data = new Uint8Array(payload.buffer);\n  const length = data.length;\n\n  let result = true;\n  for (let i = 0; i < length; i += 4) {\n    if (!isGrayscale(data[i], data[i + 1], data[i + 2], payload.threshold)) {\n      console.log(`Found colored pixel, position: ${i}, rgb: ${data[i]}, ${data[i+1]}, ${data[i+2]}`);\n      \n      result = false;\n      break;\n    }\n  }\n\n  resolve(payload.id, result);\n};\n\n/**\n * @param {string} id\n * @param {boolean} result\n */\nfunction resolve(id, result) {\n  self.postMessage({ id, result }, []);\n}\n\n/**\n * @param {number} red\n * @param {number} green\n * @param {number} blue\n * @param {number} threshold\n * @return {boolean}\n */\nfunction isGrayscale(red, green, blue, threshold) {\n  const isFullyGrayscale = red === green && green === blue;\n\n  if (!threshold || isFullyGrayscale) {\n    return isFullyGrayscale;\n  }\n\n  return Math.abs(red - green) <= threshold && Math.abs(green - blue) <= threshold && Math.abs(red - blue) <= threshold;\n}\n"
 };
 },{}],"../src/workers/worker-port.ts":[function(require,module,exports) {
 "use strict";
@@ -32621,9 +32620,8 @@ function () {
     return _blobReader.BlobReader.readHeader(blob).then(function (header) {
       var _a;
 
-      console.log(header);
-
       if (!(header in HEADER_MIME_TYPE_MAP)) {
+        console.log(header);
         return Promise.reject(new Error('Unknown mime type'));
       }
 
@@ -32869,6 +32867,7 @@ function () {
         }
 
         var buffer = imageData.data.buffer;
+        console.log('via worker s');
         workerPort.subscribe(_this.iterationId, function (data) {
           return resolve(data.result ? IMAGE_COLOR_TYPE.GRAYSCALE : IMAGE_COLOR_TYPE.COLORED);
         });
@@ -33575,7 +33574,7 @@ var parent = module.bundle.parent;
 if ((!parent || !parent.isParcelRequire) && typeof WebSocket !== 'undefined') {
   var hostname = "" || location.hostname;
   var protocol = location.protocol === 'https:' ? 'wss' : 'ws';
-  var ws = new WebSocket(protocol + '://' + hostname + ':' + "50083" + '/');
+  var ws = new WebSocket(protocol + '://' + hostname + ':' + "59006" + '/');
 
   ws.onmessage = function (event) {
     checkedAssets = {};
