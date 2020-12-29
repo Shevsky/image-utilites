@@ -20,7 +20,8 @@ const HEADER_MIME_TYPE_MAP: Record<string, MIME_TYPE> = {
   ffd8ffe2: MIME_TYPE.JPEG,
   ffd8ffe3: MIME_TYPE.JPEG,
   ffd8ffe8: MIME_TYPE.JPEG,
-  ffd8ffee: MIME_TYPE.JPEG
+  ffd8ffee: MIME_TYPE.JPEG,
+  ffd8fffe: MIME_TYPE.JPEG
 };
 
 export class MimeTypeReader {
